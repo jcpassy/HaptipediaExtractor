@@ -7,10 +7,8 @@ writeToFile default setting is False
 
 'Example:'
 
-pdffigures2_dir = r'C:\Users\john_\Desktop\pdffigures2'
+pdffigures2_dir = r'/src/pdffigures2'
 thread_count = '4'
 should_init_crossrefs = False
 add_to_db = False
 writeToFile = True
-
-

@@ -1,9 +1,12 @@
-import os
 import glob
-import time
-import requests
-import subprocess
 import json
+import os
+from pathlib import Path
+import subprocess
+import time
+
+import requests
+
 from ConfigPaths import add_to_db
 from DatabaseFunctionalityModules.DatabaseConnection import check_database
 from Device import get_devices
@@ -19,11 +22,14 @@ trans_table = str.maketrans(' ', '_')
 
 main_dir = os.getcwd()
 
+# For docker, we are using the service name
+HOSTNAME = 'localhost'
+
 
 def check_resources():
     try:
-        requests.post('http://localhost:8070/api/isalive')
-    except:
+        requests.post('http://' + HOSTNAME + ':8070/api/isalive')
+    except BaseException:
         print("GROBID NOT RUNNING IN BACKGROUND")
         return False
 
@@ -77,7 +83,7 @@ Returns: none
 
 def create_folder_with_figs(folder_name, pdf_name):
     if folder_name is not None:
-        if type(folder_name) is bytes:
+        if isinstance(folder_name, bytes):
             folder_name = folder_name.decode('utf8')
 
         folder_name = folder_name.strip()  # remove any trailing spaces
@@ -117,10 +123,11 @@ def organize_images(pdf_name, folder_name):
 
     if os.path.exists('temp_imgs'):
         os.chdir('temp_imgs')
-        pdf_length = len(pdf_name) + 1 # to take into account the dash at the end and 0-index
+        pdf_length = len(pdf_name) + 1  # to take into account the dash at the end and 0-index
 
         # figures are named in the form pdf_name-FigureX-XX.png
-        pdfs = glob.glob(pdf_name + '-Figure' + "*" +".png") + glob.glob(pdf_name + '-Table' + "*" +".png")
+        pdfs = glob.glob(
+            pdf_name + '-Figure' + "*" + ".png") + glob.glob(pdf_name + '-Table' + "*" + ".png")
 
         for pdf in pdfs:
             # new name of the pdf is now FigureX
@@ -168,7 +175,7 @@ def write_fig_captions(pdf_name, folder_name):
 
                 with open(folder_name + '/Figures/' + figure_number + '.txt', 'w+', encoding='utf8') as fig_text:
                     fig_text.write(caption)
-    except:
+    except BaseException:
         print("No JSON found for " + file)
 
 
@@ -188,27 +195,33 @@ def data_extractor(input_dir, output_dir):
     for file in glob.glob('*.pdf'):
 
         papers = {"input": open(file, 'rb'), "consolidateCitations": "0"}
-        r = requests.post('http://localhost:8070/api/processFulltextDocument', files=papers)
+        print("Papers: ", papers)
 
-        print("Status code for " + file + " = " + str(r.status_code))
+        try:
+            r = requests.post(
+                'http://' +
+                HOSTNAME +
+                ':8070/api/processFulltextDocument',
+                files=papers)
+            print("Status code for " + file + " = " + str(r.status_code))
+            if r.status_code == 200:
 
-        if r.status_code == 200:
+                tei_result = r.text
 
-            tei_result = r.text
+                if tei_result is bytes:
+                    tei_result.decode('utf8')
 
-            if tei_result is bytes:
-                tei_result.decode('utf8')
+                file_name = os.path.splitext(file)[0]
 
-            file_name = os.path.splitext(file)[0]
+                filepath = Path(output_dir) / (file_name + ".xml")
+                with open(filepath, 'w+', encoding='utf8') as XMLfile:
+                    XMLfile.write(tei_result)
 
-            XMLfile = open(output_dir + '/' + file_name + ".xml", 'w+', encoding='utf8')
-
-            XMLfile.write(tei_result)
-            XMLfile.close()
-
-        else:
-            print("Status Code Not 200 for %s" % file)
-            #TODO: write error PDFS into some kind of error report
+            else:
+                print("Status Code Not 200 for %s" % file)
+                # TODO: write error PDFS into some kind of error report
+        except BaseException as e:
+            print(e)
 
 
 """
@@ -226,9 +239,6 @@ Returns: none
 
 def extract_figures(input_dir, output_dir, pdffigures2_dir, thread_count):
 
-    # go to the director of where the PDF's are located
-    os.chdir(input_dir)
-
     os.chdir(pdffigures2_dir)
 
     image_outputs = output_dir + '/temp_imgs/'
@@ -237,7 +247,14 @@ def extract_figures(input_dir, output_dir, pdffigures2_dir, thread_count):
 
     stat_file = output_dir + '/stats.json'
 
-    command = ' '.join(['run-main', 'org.allenai.pdffigures2.FigureExtractorBatchCli', input_dir, '-m', image_outputs, '-d', output_dir, '-s', stat_file, '-t', thread_count, '-e'])
+    command = ' '.join(
+        ['runMain', 'org.allenai.pdffigures2.FigureExtractorBatchCli', input_dir,
+         '-m', image_outputs,
+         '-d', output_dir + '/',
+         '-s', stat_file,
+         '-t', thread_count,
+         '-e']
+    )
     sbt_command = ' '.join(['sbt', '"' + command + '"'])
     try:
         subprocess.Popen(sbt_command, shell=True, universal_newlines=True).communicate()
@@ -258,6 +275,3 @@ def remove_space(file):
 
     new_name = file.translate(trans_table)
     os.rename(file, new_name)
-
-
-

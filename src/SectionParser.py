@@ -35,13 +35,15 @@ def parse_abstract(root, device):
     device.sections['Abstract'] = abstract
     device.abstract = abstract
 
+
 """
 Parses through section to extract text and also counts number of times each citation is cited and where it was cited
 Outputs:
 cite_occurance: for each citation, gives the number of times it was cited in the text
 citation_placement: for each citation, give the sections where it was cited
-unaccounted_citations: 
+unaccounted_citations:
 """
+
 
 def parse_and_find_citation_vals(root, device):
 
@@ -65,10 +67,13 @@ def parse_and_find_citation_vals(root, device):
         paragraphs = []
 
         for paragraph in div.findall("{http://www.tei-c.org/ns/1.0}p"):
+
             text = paragraph.text
-            for ref in paragraph.findall("{http://www.tei-c.org/ns/1.0}ref"):  # extract text after the references
+            # extract text after the references
+            for ref in paragraph.findall("{http://www.tei-c.org/ns/1.0}ref"):
                 if ref is not None:
-                    extract_ref_count(ref, cite_occurrence, citation_placement, citations_not_accounted, section_file)
+                    extract_ref_count(ref, cite_occurrence, citation_placement,
+                                      citations_not_accounted, section_file)
                     if ref.tail and ref.text is not None:
                         text = text + ref.text + ref.tail
                     elif ref.text is not None:
@@ -116,7 +121,8 @@ def extract_ref_count(ref, cite_occurrence, citation_placement, citations_not_ac
                         # conditional to stop equation references added to ref-count
                         if '(' not in ref.text and ')' not in ref.text:
                             ref_number = int(ref_regex[0])
-                            add_ref_count(ref_number, cite_occurrence, citation_placement, section_file)
+                            add_ref_count(ref_number, cite_occurrence,
+                                          citation_placement, section_file)
                     else:
                         # if GROBID can't match reference, add to citations_not_accounted,
                         # citations_not_accounted is a list of tuples with the ref text and the section it was cited in
@@ -134,7 +140,7 @@ def compare_ref_numbers(bibr_number, text_number):
 
 def add_ref_count(ref_number, cite_occurrence, citation_locations, section_file):
     if ref_number not in cite_occurrence:
-        cite_occurrence[ref_number] = 1;
+        cite_occurrence[ref_number] = 1
         citation_locations[ref_number] = [section_file]
         print(str(ref_number) + " cited: one time")
 
@@ -143,11 +149,3 @@ def add_ref_count(ref_number, cite_occurrence, citation_locations, section_file)
         if section_file not in citation_locations[ref_number]:
             citation_locations[ref_number].append(section_file)
         print(str(ref_number) + " cited: %s times" % str(cite_occurrence[ref_number]))
-
-
-
-
-
-
-
-

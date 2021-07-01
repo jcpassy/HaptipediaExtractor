@@ -2,6 +2,7 @@ import sys
 import time
 import glob
 import os
+from pathlib import Path
 import argparse
 import Extractor as extractor
 import ConfigPaths as config
@@ -11,9 +12,7 @@ from DatabaseFunctionalityModules.DatabaseConnection import add_data
 from DatabaseFunctionalityModules.ID_Fixer import fix_pub_and_author_id
 from Authors import build_author_list
 
-input_dir = os.path.join(os.getcwd(), 'inputs/')
-output_dir = os.path.join(os.getcwd(), 'outputs/')
-pdffigures2_dir = config.pdffigures2_dir
+
 thread_count = config.thread_count
 pdfs_are_main_pubs = True
 
@@ -21,9 +20,23 @@ pdfs_are_main_pubs = True
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--secondary', help='PDF Files have some secondary publications', action='store_true')
+    parser.add_argument(
+        '-s', '--secondary', action='store_true',
+        help='PDF Files have some secondary publications',
+    )
+    parser.add_argument(
+        '-i', '--input', help='Folder containing the PDF Files',
+        default=os.path.join(os.getcwd(), 'inputs/')
+    )
+    parser.add_argument(
+        '-o', '--output', help='Output folder',
+        default=os.path.join(os.getcwd(), 'outputs/')
+    )
+    parser.add_argument(
+        '-d', '--dir', help='PDFFigures directory',
+        default=config.pdffigures2_dir
+    )
     args = parser.parse_args()
-    print(args)
 
     if args.secondary:
         print("PDF FIles are not all mains or are secondaries")
@@ -35,10 +48,18 @@ if __name__ == '__main__':
 
     init_start = time.time()
 
+    # Create output directory if necessary
+    Path(args.output).mkdir(parents=True, exist_ok=True)
+
+    # Pass everything as string because code was written in 3.5
+    input_dir = str(Path(args.input))
+    output_dir = str(Path(args.output))
+    pdffigures2_dir = str(Path(args.dir))
+
     is_ready_to_run = extractor.check_resources()
 
     if is_ready_to_run:
-        "remove spaces from names of PDF's since spaces causes pdffigures2 to skip pdf"
+        # remove spaces from names of PDF's since spaces causes pdffigures2 to skip pdf
         os.chdir(input_dir)
         for file in glob.glob("*.pdf"):
             extractor.remove_space(file)

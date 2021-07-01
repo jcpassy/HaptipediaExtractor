@@ -31,6 +31,7 @@ def init_ref_dict(title, ref_number):
 
     return reference
 
+
 """
 Reference Parser that takes citation information from SectionParser to include in ref objects
 
@@ -52,30 +53,33 @@ def parseReference(XMLroot, device, cite_vals, citation_placements, unaccounted_
                 # title is either an analytic element or monogr element in the XML File
                 ref = biblStruct.find("{http://www.tei-c.org/ns/1.0}monogr")
 
-
             try:
-                title = ref.find("{http://www.tei-c.org/ns/1.0}title").text
 
-                if title is not None:
-                    reference = init_ref_dict(title, count)
+                element = ref.find("{http://www.tei-c.org/ns/1.0}title")
+                if element:
+                    title = element.text
 
-                    try:
-                        writeAuthors(ref, reference)
-                    except:
-                        print("problem writing authors")
-                    try:
-                        writePublishers(title, biblStruct, reference)
-                        if count in cite_vals:
-                            reference['times_cited'] = cite_vals[count]
-                            reference['locations_cited'] = citation_placements[count]
-                        device.refs.append(reference)
-                        device.ref_titles.append(reference['title'])
-                    except Exception as e:
-                        print(e)
-                        print("problem writing publisher")
+                    if title is not None:
+                        reference = init_ref_dict(title, count)
 
-                    # update the unaccounted citations with all accounted citations removed
-                    unaccounted_citations = update_unaccounted_citations(unaccounted_citations, reference)
+                        try:
+                            writeAuthors(ref, reference)
+                        except:
+                            print("problem writing authors")
+                        try:
+                            writePublishers(title, biblStruct, reference)
+                            if count in cite_vals:
+                                reference['times_cited'] = cite_vals[count]
+                                reference['locations_cited'] = citation_placements[count]
+                            device.refs.append(reference)
+                            device.ref_titles.append(reference['title'])
+                        except Exception as e:
+                            print(e)
+                            print("problem writing publisher")
+
+                        # update the unaccounted citations with all accounted citations removed
+                        unaccounted_citations = update_unaccounted_citations(
+                            unaccounted_citations, reference)
 
             except Exception as e:
                 print(e)
@@ -195,7 +199,8 @@ def writeAuthors(ref, ref_object):
         persName = author.find("{http://www.tei-c.org/ns/1.0}persName")
 
         try:
-            forename = persName.find("{http://www.tei-c.org/ns/1.0}forename")  # doesn't account mid names
+            # doesn't account mid names
+            forename = persName.find("{http://www.tei-c.org/ns/1.0}forename")
             surname = persName.find("{http://www.tei-c.org/ns/1.0}surname")
 
             if forename is not None and surname is not None:
@@ -222,5 +227,3 @@ def init_publisher_dict():
     publisher = {'name': '', 'date': '', 'pages': '', 'volume': '', 'issue': ''}
 
     return publisher
-
-
