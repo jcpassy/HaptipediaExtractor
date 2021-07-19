@@ -22,7 +22,7 @@ RUN git clone https://github.com/jcpassy/pdffigures2 && \
     sbt compile
 
 # Install HaptipediaExtractor
-RUN git clone --branch issues/HI-24-docker https://github.com/jcpassy/HaptipediaExtractor.git && \
-    cd HaptipediaExtractor && \
+COPY . HaptipediaExtractor
+RUN cd HaptipediaExtractor && \
     python3 -m pip install -U pip && \
     python3 -m pip install -r requirements.txt
