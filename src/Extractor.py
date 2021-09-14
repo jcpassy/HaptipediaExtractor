@@ -2,6 +2,7 @@ import glob
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
 import time
 
@@ -141,7 +142,8 @@ def organize_images(pdf_name, folder_name):
                 while os.path.exists(dest):
                     dest = dest[:-7] + '(' + str(count) + ').png'
                     count += 1
-            os.rename(pdf, dest)
+            #os.rename(pdf, dest)
+            shutil.copy(Path(pdf).absolute(), Path(dest).absolute())
         os.chdir('..')
 
 
