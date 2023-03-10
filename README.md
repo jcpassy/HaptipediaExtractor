@@ -40,19 +40,19 @@ $ python3 src/main.py -i /path/to/folder/with/pdfs -o /path/to/output -d /path/t
 
 It is easier to run the application in a Docker container.
 
-You can build the Docker image from the `Dockerfile`:
+You can build the Docker image from the `Dockerfile` using `docker-compose`:
 ```
-$ docker build . -t extractor
-```
-
-and then create a container:
-```
-docker run -it -d --name haptic_extractor --rm --init -p 8080:8070 -p 8081:8071 -v /host/path/to/pdfs:/container/path/to/pdfs extractor
+$ docker-compose build
 ```
 
-The ports mapping is for the GROBID service, which you need to start:
+and then start a container:
 ```
-docker exec -it -d haptic_extractor  bash -c "cd /src/grobid-0.6.2 && . ./grobid_startup.sh"
+docker-compose up -d
+```
+
+To stop the container
+```
+docker-compose down
 ```
 
 The addresses [http://localhost:8080](http://localhost:8080) and [http://localhost:8081](http://localhost:8081) should then be accessible (more details on the GROBID official documentation).
@@ -60,5 +60,19 @@ The addresses [http://localhost:8080](http://localhost:8080) and [http://localho
 Finally, you can attach a shell to the container and run the extractor:
 ```
 root@containerid $ cd /src/HaptipediaExtractor
-root@containerid $ python3 src/main.py -i /container/path/to/pdfs -o /path/to/output -d /path/to/pdffigures2
+root@containerid $ python3 src/main.py -i /container/path/to/folder/container/pdf -o /path/to/output/folder -d /path/to/pdffigures2
+```
+
+for instance, if you use the default environment variables:
+
+```
+root@containerid $ python3  src/main.py -i /tmp/haptipedia/input -o /tmp/haptipedia/output -d /work/src/pdffigures2
+```
+
+## Tests
+
+You can run the extracition test inside the container by doing:
+
+```
+root@containerid $ python3 -m unittest
 ```

@@ -1,0 +1,6 @@
+.vscode
+temporary
+
+.gitignore
+docker-compose.yaml
+Dockerfile

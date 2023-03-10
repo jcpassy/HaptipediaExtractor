@@ -1,0 +1,19 @@
+version: "3"
+
+services:
+  haptipedia_extractor:
+    image: "docker.is.localnet:5000/sw_hi/haptipedia_extractor:latest"
+    init: true # use Tini (https://github.com/krallin/tini)
+    container_name: "${CONTAINER_NAME:-haptic_extractor}"
+    build:
+      context: .
+      args:
+        DEPS_SRC: $DEPS_SRC
+        HEXTRACT_SRC: $HEXTRACT_SRC
+    ports:
+      - "8080:8070"
+      - "8081:8071"
+    #restart: "always"
+    tty: true
+    volumes:
+      - $HOST_RESULTS_DIR:$DOCKER_RESULTS_DIR # directory containing extraction results
